@@ -149,10 +149,8 @@ DBOptions BuildDBOptions(const ImmutableDBOptions& immutable_db_options,
       immutable_db_options.avoid_flush_during_recovery;
   options.avoid_flush_during_shutdown =
       mutable_db_options.avoid_flush_during_shutdown;
-  options.allow_ingest_behind =
-      immutable_db_options.allow_ingest_behind;
-  options.preserve_deletes =
-      immutable_db_options.preserve_deletes;
+  options.allow_ingest_behind = immutable_db_options.allow_ingest_behind;
+  options.preserve_deletes = immutable_db_options.preserve_deletes;
   options.two_write_queues = immutable_db_options.two_write_queues;
   options.manual_wal_flush = immutable_db_options.manual_wal_flush;
   options.atomic_flush = immutable_db_options.atomic_flush;
@@ -226,6 +224,14 @@ ColumnFamilyOptions BuildColumnFamilyOptions(
   cf_opts.compaction_options_fifo = mutable_cf_options.compaction_options_fifo;
   cf_opts.compaction_options_universal =
       mutable_cf_options.compaction_options_universal;
+  cf_opts.compaction_options_bigtable =
+      mutable_cf_options.compaction_options_bigtable;
+  cf_opts.compaction_options_binomial =
+      mutable_cf_options.compaction_options_binomial;
+  cf_opts.compaction_options_constant =
+      mutable_cf_options.compaction_options_constant;
+  cf_opts.compaction_options_minlatency =
+      mutable_cf_options.compaction_options_minlatency;
 
   // Blob file related options
   cf_opts.enable_blob_files = mutable_cf_options.enable_blob_files;
@@ -395,7 +401,8 @@ static bool ParseOptionHelper(char* opt_address, const OptionType& opt_type,
       *reinterpret_cast<uint32_t*>(opt_address) = ParseUint32(value);
       break;
     case OptionType::kUInt64T:
-      PutUnaligned(reinterpret_cast<uint64_t*>(opt_address), ParseUint64(value));
+      PutUnaligned(reinterpret_cast<uint64_t*>(opt_address),
+                   ParseUint64(value));
       break;
     case OptionType::kSizeT:
       PutUnaligned(reinterpret_cast<size_t*>(opt_address), ParseSizeT(value));
@@ -443,7 +450,6 @@ static bool ParseOptionHelper(char* opt_address, const OptionType& opt_type,
 bool SerializeSingleOptionHelper(const char* opt_address,
                                  const OptionType opt_type,
                                  std::string* value) {
-
   assert(value);
   switch (opt_type) {
     case OptionType::kBoolean:
@@ -455,33 +461,27 @@ bool SerializeSingleOptionHelper(const char* opt_address,
     case OptionType::kInt32T:
       *value = ToString(*(reinterpret_cast<const int32_t*>(opt_address)));
       break;
-    case OptionType::kInt64T:
-      {
-        int64_t v;
-        GetUnaligned(reinterpret_cast<const int64_t*>(opt_address), &v);
-        *value = ToString(v);
-      }
-      break;
+    case OptionType::kInt64T: {
+      int64_t v;
+      GetUnaligned(reinterpret_cast<const int64_t*>(opt_address), &v);
+      *value = ToString(v);
+    } break;
     case OptionType::kUInt:
       *value = ToString(*(reinterpret_cast<const unsigned int*>(opt_address)));
       break;
     case OptionType::kUInt32T:
       *value = ToString(*(reinterpret_cast<const uint32_t*>(opt_address)));
       break;
-    case OptionType::kUInt64T:
-      {
-        uint64_t v;
-        GetUnaligned(reinterpret_cast<const uint64_t*>(opt_address), &v);
-        *value = ToString(v);
-      }
-      break;
-    case OptionType::kSizeT:
-      {
-        size_t v;
-        GetUnaligned(reinterpret_cast<const size_t*>(opt_address), &v);
-        *value = ToString(v);
-      }
-      break;
+    case OptionType::kUInt64T: {
+      uint64_t v;
+      GetUnaligned(reinterpret_cast<const uint64_t*>(opt_address), &v);
+      *value = ToString(v);
+    } break;
+    case OptionType::kSizeT: {
+      size_t v;
+      GetUnaligned(reinterpret_cast<const size_t*>(opt_address), &v);
+      *value = ToString(v);
+    } break;
     case OptionType::kDouble:
       *value = ToString(*(reinterpret_cast<const double*>(opt_address)));
       break;
@@ -756,10 +756,9 @@ Status GetColumnFamilyOptionsFromMap(
   }
 }
 
-Status GetColumnFamilyOptionsFromString(
-    const ColumnFamilyOptions& base_options,
-    const std::string& opts_str,
-    ColumnFamilyOptions* new_options) {
+Status GetColumnFamilyOptionsFromString(const ColumnFamilyOptions& base_options,
+                                        const std::string& opts_str,
+                                        ColumnFamilyOptions* new_options) {
   ConfigOptions config_options;
   config_options.input_strings_escaped = false;
   config_options.ignore_unknown_options = false;

@@ -163,6 +163,10 @@ struct MutableCFOptions {
             options.max_bytes_for_level_multiplier_additional),
         compaction_options_fifo(options.compaction_options_fifo),
         compaction_options_universal(options.compaction_options_universal),
+        compaction_options_bigtable(options.compaction_options_bigtable),
+        compaction_options_binomial(options.compaction_options_binomial),
+        compaction_options_constant(options.compaction_options_constant),
+        compaction_options_minlatency(options.compaction_options_minlatency),
         enable_blob_files(options.enable_blob_files),
         min_blob_size(options.min_blob_size),
         blob_file_size(options.blob_file_size),
@@ -270,6 +274,10 @@ struct MutableCFOptions {
   std::vector<int> max_bytes_for_level_multiplier_additional;
   CompactionOptionsFIFO compaction_options_fifo;
   CompactionOptionsUniversal compaction_options_universal;
+  CompactionOptionsBigtable compaction_options_bigtable;
+  CompactionOptionsBinomial compaction_options_binomial;
+  CompactionOptionsConstant compaction_options_constant;
+  CompactionOptionsMinLatency compaction_options_minlatency;
 
   // Blob file related options
   bool enable_blob_files;
@@ -299,9 +307,10 @@ struct MutableCFOptions {
 uint64_t MultiplyCheckOverflow(uint64_t op1, double op2);
 
 // Get the max file size in a given level.
-uint64_t MaxFileSizeForLevel(const MutableCFOptions& cf_options,
-    int level, CompactionStyle compaction_style, int base_level = 1,
-    bool level_compaction_dynamic_level_bytes = false);
+uint64_t MaxFileSizeForLevel(const MutableCFOptions& cf_options, int level,
+                             CompactionStyle compaction_style,
+                             int base_level = 1,
+                             bool level_compaction_dynamic_level_bytes = false);
 
 // Get the max size of an L0 file for which we will pin its meta-blocks when
 // `pin_l0_filter_and_index_blocks_in_cache` is set.

@@ -25,6 +25,7 @@
 #include "rocksdb/file_checksum.h"
 #include "rocksdb/listener.h"
 #include "rocksdb/sst_partitioner.h"
+#include "rocksdb/stack_compaction.h"
 #include "rocksdb/types.h"
 #include "rocksdb/universal_compaction.h"
 #include "rocksdb/version.h"

@@ -12,6 +12,7 @@
 
 #include "rocksdb/compression_type.h"
 #include "rocksdb/memtablerep.h"
+#include "rocksdb/stack_compaction.h"
 #include "rocksdb/universal_compaction.h"
 
 namespace ROCKSDB_NAMESPACE {
@@ -31,10 +32,20 @@ enum CompactionStyle : char {
   // FIFO compaction style
   // Not supported in ROCKSDB_LITE
   kCompactionStyleFIFO = 0x2,
+  // Bigtable compaction style
+  kCompactionStyleBigtale = 0x3,
+  // Binomial compaction style
+  kCompactionStyleBinomial = 0x4,
+  // Constant compaction style
+  kCompactionStyleConstant = 0x5,
+  // Exploring compaction style
+  kCompactionStyleExploring = 0x6,
+  // MinLatency compaction style
+  kCompactionStyleMinLatency = 0x7,
   // Disable background compaction. Compaction jobs are submitted
   // via CompactFiles().
   // Not supported in ROCKSDB_LITE
-  kCompactionStyleNone = 0x3,
+  kCompactionStyleNone = 0x8,
 };
 
 // In Level-based compaction, it Determines which file from a level to be
@@ -163,10 +174,10 @@ struct CompressionOptions {
         enabled(_enabled) {}
 };
 
-enum UpdateStatus {    // Return status For inplace update callback
-  UPDATE_FAILED   = 0, // Nothing to update
-  UPDATED_INPLACE = 1, // Value updated inplace
-  UPDATED         = 2, // No inplace update. Merged value set
+enum UpdateStatus {     // Return status For inplace update callback
+  UPDATE_FAILED = 0,    // Nothing to update
+  UPDATED_INPLACE = 1,  // Value updated inplace
+  UPDATED = 2,          // No inplace update. Merged value set
 };
 
 struct AdvancedColumnFamilyOptions {
@@ -576,6 +587,16 @@ struct AdvancedColumnFamilyOptions {
   // Dynamic change example:
   // SetOptions("compaction_options_fifo", "{max_table_files_size=100;}")
   CompactionOptionsFIFO compaction_options_fifo;
+
+  // The options needed to support Bounded-depth Style compactions
+  //
+  // Dynamically changeable through SetOptions() API
+  // Dynamic change example:
+  // SetOptions("compaction_options_bigtable", "{k=8;}")
+  CompactionOptionsBigtable compaction_options_bigtable;
+  CompactionOptionsBinomial compaction_options_binomial;
+  CompactionOptionsConstant compaction_options_constant;
+  CompactionOptionsMinLatency compaction_options_minlatency;
 
   // An iteration->Next() sequentially skips over keys with the same
   // user-key unless this option is set. This number specifies the number

@@ -211,6 +211,30 @@ static std::unordered_map<std::string, OptionTypeInfo>
           OptionTypeFlags::kMutable}}};
 
 static std::unordered_map<std::string, OptionTypeInfo>
+    bigtable_compaction_options_type_info = {
+        {"k",
+         {offsetof(class CompactionOptionsBigtable, k), OptionType::kUInt,
+          OptionVerificationType::kNormal, OptionTypeFlags::kMutable}}};
+
+static std::unordered_map<std::string, OptionTypeInfo>
+    binomial_compaction_options_type_info = {
+        {"k",
+         {offsetof(class CompactionOptionsBinomial, k), OptionType::kUInt,
+          OptionVerificationType::kNormal, OptionTypeFlags::kMutable}}};
+
+static std::unordered_map<std::string, OptionTypeInfo>
+    constant_compaction_options_type_info = {
+        {"k",
+         {offsetof(class CompactionOptionsConstant, k), OptionType::kUInt,
+          OptionVerificationType::kNormal, OptionTypeFlags::kMutable}}};
+
+static std::unordered_map<std::string, OptionTypeInfo>
+    minlatency_compaction_options_type_info = {
+        {"k",
+         {offsetof(class CompactionOptionsMinLatency, k), OptionType::kUInt,
+          OptionVerificationType::kNormal, OptionTypeFlags::kMutable}}};
+
+static std::unordered_map<std::string, OptionTypeInfo>
     cf_mutable_options_type_info = {
         {"report_bg_io_stats",
          {offsetof(struct MutableCFOptions, report_bg_io_stats),
@@ -384,6 +408,30 @@ static std::unordered_map<std::string, OptionTypeInfo>
              "compaction_options_universal",
              &universal_compaction_options_type_info,
              offsetof(struct MutableCFOptions, compaction_options_universal),
+             OptionVerificationType::kNormal, OptionTypeFlags::kMutable)},
+        {"compaction_options_bigtable",
+         OptionTypeInfo::Struct(
+             "compaction_options_bigtable",
+             &bigtable_compaction_options_type_info,
+             offsetof(struct MutableCFOptions, compaction_options_bigtable),
+             OptionVerificationType::kNormal, OptionTypeFlags::kMutable)},
+        {"compaction_options_binomial",
+         OptionTypeInfo::Struct(
+             "compaction_options_binomial",
+             &binomial_compaction_options_type_info,
+             offsetof(struct MutableCFOptions, compaction_options_binomial),
+             OptionVerificationType::kNormal, OptionTypeFlags::kMutable)},
+        {"compaction_options_constant",
+         OptionTypeInfo::Struct(
+             "compaction_options_constant",
+             &constant_compaction_options_type_info,
+             offsetof(struct MutableCFOptions, compaction_options_constant),
+             OptionVerificationType::kNormal, OptionTypeFlags::kMutable)},
+        {"compaction_options_minlatency",
+         OptionTypeInfo::Struct(
+             "compaction_options_minlatency",
+             &minlatency_compaction_options_type_info,
+             offsetof(struct MutableCFOptions, compaction_options_minlatency),
              OptionVerificationType::kNormal, OptionTypeFlags::kMutable)},
         {"ttl",
          {offsetof(struct MutableCFOptions, ttl), OptionType::kUInt64T,
@@ -863,9 +911,9 @@ uint64_t MultiplyCheckOverflow(uint64_t op1, double op2) {
 // when level_compaction_dynamic_level_bytes is true and leveled compaction
 // is used, the base level is not always L1, so precomupted max_file_size can
 // no longer be used. Recompute file_size_for_level from base level.
-uint64_t MaxFileSizeForLevel(const MutableCFOptions& cf_options,
-    int level, CompactionStyle compaction_style, int base_level,
-    bool level_compaction_dynamic_level_bytes) {
+uint64_t MaxFileSizeForLevel(const MutableCFOptions& cf_options, int level,
+                             CompactionStyle compaction_style, int base_level,
+                             bool level_compaction_dynamic_level_bytes) {
   if (!level_compaction_dynamic_level_bytes || level < base_level ||
       compaction_style != kCompactionStyleLevel) {
     assert(level >= 0);
@@ -1005,6 +1053,16 @@ void MutableCFOptions::Dump(Logger* log) const {
                  compaction_options_fifo.max_table_files_size);
   ROCKS_LOG_INFO(log, "compaction_options_fifo.allow_compaction : %d",
                  compaction_options_fifo.allow_compaction);
+
+  // Bounded-depth Compaction Options
+  ROCKS_LOG_INFO(log, "compaction_options_bigtable.k : %u",
+                 compaction_options_bigtable.k);
+  ROCKS_LOG_INFO(log, "compaction_options_binomial.k : %u",
+                 compaction_options_binomial.k);
+  ROCKS_LOG_INFO(log, "compaction_options_bigtable.k : %u",
+                 compaction_options_constant.k);
+  ROCKS_LOG_INFO(log, "compaction_options_minlatency.k : %u",
+                 compaction_options_minlatency.k);
 
   // Blob file related options
   ROCKS_LOG_INFO(log, "                        enable_blob_files: %s",
